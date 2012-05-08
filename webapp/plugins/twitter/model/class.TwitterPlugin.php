@@ -166,6 +166,7 @@ class TwitterPlugin extends Plugin implements CrawlerPlugin, DashboardPlugin, Po
                 $crawler->fetchUnloadedFollowerDetails();
                 $crawler->cleanUpFollows();
                 $crawler->fetchFriendTweetsAndFriends();
+                $crawler->generateInsights(3);
 
                 if ($noauth) {
                     // No auth req'd
@@ -502,6 +503,14 @@ class TwitterPlugin extends Plugin implements CrawlerPlugin, DashboardPlugin, Po
         $ptabds->addHelp('userguide/listings/twitter/dashboard_links-photos');
         $ptab->addDataset($ptabds);
         $menus["links-photos"] = $ptab;
+
+        $insights_menu_item = new MenuItem("Insights", "Insights", 'insights.tpl');
+
+        $insights_menu_ds_1 = new Dataset("insights", 'InsightDAO', "getInsights",
+        array($instance->id, 25, "#page_number#") );
+        $insights_menu_ds_1->addHelp('userguide/listings/twitter/dashboard_insights');
+        $insights_menu_item->addDataset($insights_menu_ds_1);
+        $menus['insights'] = $insights_menu_item;
 
         return $menus;
     }
