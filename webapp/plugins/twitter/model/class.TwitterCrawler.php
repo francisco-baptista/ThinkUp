@@ -1944,6 +1944,14 @@ class TwitterCrawler {
             $least_likely_followers = $follow_dao->getLeastLikelyFollowersByDay($this->instance->network_user_id,
             'twitter', $days_ago, 3);
             if (sizeof($least_likely_followers) > 0 ) { //if not null, store insight
+                //If followers have more followers than half of what the instance has, jack up emphasis
+                $emphasis = Insight::EMPHASIS_LOW;
+                foreach ($least_likely_followers as $least_likely_follower) {
+                    if ($least_likely_follower->follower_count > ($this->user->follower_count/2)) {
+                        $emphasis = Insight::EMPHASIS_HIGH;
+                    }
+                }
+
                 $insight_date = new DateTime();
                 //Not PHP 5.2 compatible
                 //$insight_date->sub(new DateInterval('P'.$days_ago.'D'));
@@ -1952,11 +1960,11 @@ class TwitterCrawler {
                 if (sizeof($least_likely_followers) > 1) {
                     $insight_dao->insertInsight('least_likely_followers', $this->instance->id, $insight_date,
                     "Good people: ".sizeof($least_likely_followers)." interesting users followed you.",
-                    Insight::EMPHASIS_LOW, serialize($least_likely_followers));
+                    $emphasis, serialize($least_likely_followers));
                 } else {
                     $insight_dao->insertInsight('least_likely_followers', $this->instance->id, $insight_date,
                     "An interesting user followed you.",
-                    Insight::EMPHASIS_LOW, serialize($least_likely_followers));
+                    $emphasis, serialize($least_likely_followers));
                 }
             }
             $days_ago++;
@@ -2025,23 +2033,21 @@ class TwitterCrawler {
             }
 
             $years_to_rewind = 6;
-            $year_to_process = 1;
-            while ($year_to_process <= $years_to_rewind) {
-                $existing_insight = $insight_dao->getInsight("posts_from_".$year_to_process."_years_ago",
-                $this->instance->id, $insight_date_formatted);
-                if (!isset($existing_insight)) {
-                    //Generate year ago insights
-                    $query_year = date(date( 'Y', strtotime("today -".$year_to_process." year")));
-                    $year_ago_posts = $post_dao->getPostsFromThisDayThatYear($this->instance->network_user_id,
-                    'twitter', $query_year, $insight_date_formatted);
-                    if (isset($year_ago_posts) && sizeof($year_ago_posts) > 0 ) {
-                        $plural = ($year_to_process > 1 )?'s':'';
-                        $insight_dao->insertInsight("posts_from_".$year_to_process."_years_ago", $this->instance->id,
-                        $insight_date_formatted, "Flashback: ".$year_to_process." year".$plural.
-                        " ago today, you posted: ", Insight::EMPHASIS_MED, serialize($year_ago_posts));
-                    }
+            $existing_insight = $insight_dao->getInsight("posts_on_this_day_flashback", $this->instance->id,
+            $insight_date_formatted);
+            if (!isset($existing_insight)) {
+                //Generate flashback post list
+                $flashback_posts = $post_dao->getOnThisDayFlashbackPosts($this->instance->network_user_id, 'twitter',
+                $insight_date_formatted);
+                if (isset($flashback_posts) && sizeof($flashback_posts) > 0 ) {
+                    $oldest_post_year = date(date( 'Y' , strtotime($flashback_posts[0]->pub_date)));
+                    $current_year = date('Y');
+                    $number_of_years_ago = $current_year - $oldest_post_year;
+                    $plural = ($number_of_years_ago > 1 )?'s':'';
+                    $insight_dao->insertInsight("posts_on_this_day_flashback", $this->instance->id,
+                    $insight_date_formatted, "Flashback: ".$number_of_years_ago." year".$plural.
+                    " ago today, you posted: ", Insight::EMPHASIS_MED, serialize($flashback_posts));
                 }
-                $year_to_process++;
             }
 
             $days_ago--;
