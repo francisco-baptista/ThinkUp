@@ -1933,6 +1933,14 @@ class TwitterCrawler {
                 $insight_dao->deleteInsight('retweet_spike_30_day_'.$post->id, $this->instance->id,
                 $simplified_post_date);
             }
+
+            //If geoencoded, show the map in the stream
+            $plugin_option_dao = DAOFactory::GetDAO('PluginOptionDAO');
+            $options = $plugin_option_dao->getOptionsHash('geoencoder', true);
+            if (isset($options['gmaps_api_key']->option_value) && $post->is_geo_encoded == 1) {
+                $insight_dao->insertInsight('geoencoded_replies', $this->instance->id, $simplified_post_date,
+                "Going global! You've got replies all over the map.", Insight::EMPHASIS_LOW, serialize($post));
+            }
         }
 
         //Generate least likely followers insights
