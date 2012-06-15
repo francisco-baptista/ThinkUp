@@ -1941,7 +1941,8 @@ class TwitterCrawler {
                 $options = $plugin_option_dao->getOptionsHash('geoencoder', true);
                 if (isset($options['gmaps_api_key']->option_value) && $post->is_geo_encoded == 1) {
                     $insight_dao->insertInsight('geoencoded_replies', $this->instance->id, $simplified_post_date,
-                   "Going global! You've got replies all over the map.", Insight::EMPHASIS_LOW, serialize($post));
+                   "Going global! Your post got replies and retweets from all over the map.", Insight::EMPHASIS_LOW,
+                    serialize($post));
                 }
             }
         }

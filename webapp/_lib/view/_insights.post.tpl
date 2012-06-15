@@ -52,7 +52,10 @@
 </div>
 
 {if $i->slug eq 'geoencoded_replies'}
+<div align="right"><a href="javascript:;" title="See map of replies and shares" onclick="{literal}${/literal}('#map-{$i->id}').show(); return false;">see map...</a>&nbsp;&nbsp;</div>
+<div style="display:none" id="map-{$i->id}">
 <script type="text/javascript" src="{$site_root_path}plugins/geoencoder/assets/js/iframe.js"></script>
 <iframe width="680" frameborder="0" src="{$site_root_path}plugins/geoencoder/map.php?pid={$post->post_id}&n=twitter&t=post" name="childframe" id="childframe" >
 </iframe>
+</div>
 {/if}
