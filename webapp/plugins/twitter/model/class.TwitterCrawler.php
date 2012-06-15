@@ -1934,12 +1934,15 @@ class TwitterCrawler {
                 $simplified_post_date);
             }
 
-            //If geoencoded, show the map in the stream
-            $plugin_option_dao = DAOFactory::GetDAO('PluginOptionDAO');
-            $options = $plugin_option_dao->getOptionsHash('geoencoder', true);
-            if (isset($options['gmaps_api_key']->option_value) && $post->is_geo_encoded == 1) {
-                $insight_dao->insertInsight('geoencoded_replies', $this->instance->id, $simplified_post_date,
-                "Going global! You've got replies all over the map.", Insight::EMPHASIS_LOW, serialize($post));
+            //If not a reply or retweet and geoencoded, show the map in the stream
+            if (!isset($post->$in_reply_to_user_id) && !isset($post->$in_reply_to_post_id)
+            && !isset($post->in_retweet_of_post_id) && $post->reply_count_cache > 5) {
+                $plugin_option_dao = DAOFactory::GetDAO('PluginOptionDAO');
+                $options = $plugin_option_dao->getOptionsHash('geoencoder', true);
+                if (isset($options['gmaps_api_key']->option_value) && $post->is_geo_encoded == 1) {
+                    $insight_dao->insertInsight('geoencoded_replies', $this->instance->id, $simplified_post_date,
+                   "Going global! You've got replies all over the map.", Insight::EMPHASIS_LOW, serialize($post));
+                }
             }
         }
 

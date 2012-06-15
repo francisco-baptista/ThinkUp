@@ -52,7 +52,7 @@
 </div>
 
 {if $i->slug eq 'geoencoded_replies'}
-<script type="text/javascript" src="/plugins/geoencoder/assets/js/iframe.js"></script>
-<iframe width="680" frameborder="0" src="/plugins/geoencoder/map.php?pid={$post->post_id}&n=twitter&t=post" name="childframe" id="childframe" >
+<script type="text/javascript" src="{$site_root_path}plugins/geoencoder/assets/js/iframe.js"></script>
+<iframe width="680" frameborder="0" src="{$site_root_path}plugins/geoencoder/map.php?pid={$post->post_id}&n=twitter&t=post" name="childframe" id="childframe" >
 </iframe>
 {/if}
