@@ -1941,8 +1941,8 @@ class TwitterCrawler {
                 $options = $plugin_option_dao->getOptionsHash('geoencoder', true);
                 if (isset($options['gmaps_api_key']->option_value) && $post->is_geo_encoded == 1) {
                     $insight_dao->insertInsight('geoencoded_replies', $this->instance->id, $simplified_post_date,
-                   "Going global! Your post got replies and retweets from all over the map.", Insight::EMPHASIS_LOW,
-                    serialize($post));
+                   "Going global! Your post got replies and retweets from locations all over the map.",
+                    Insight::EMPHASIS_LOW, serialize($post));
                 }
             }
         }
@@ -1977,6 +1977,29 @@ class TwitterCrawler {
                     $insight_dao->insertInsight('least_likely_followers', $this->instance->id, $insight_date,
                     "An interesting user followed you.",
                     $emphasis, serialize($least_likely_followers));
+                }
+            }
+            $days_ago++;
+        }
+
+        //Generate new list membership insights
+        $group_membership_dao = DAOFactory::getDAO('GroupMemberDAO');
+        $days_ago = 0;
+        while ($days_ago < $number_days) {
+            $insight_date = new DateTime();
+            $insight_date->modify('-'.$days_ago.' day');
+            $insight_date = $insight_date->format('Y-m-d');
+            //get new group memberships per day
+            $new_groups = $group_membership_dao->getNewMembershipsByDate($this->instance->network_user_id,
+            'twitter', $insight_date);
+            if (sizeof($new_groups) > 0 ) { //if not null, store insight
+                if (sizeof($new_groups) > 1) {
+                    $insight_dao->insertInsight('new_group_memberships', $this->instance->id, $insight_date,
+                    "Filed: You got added to ".sizeof($new_groups)." lists.", Insight::EMPHASIS_LOW,
+                    serialize($new_groups));
+                } else {
+                    $insight_dao->insertInsight('new_group_memberships', $this->instance->id, $insight_date,
+                    "You're on a new list.", Insight::EMPHASIS_LOW, serialize($new_groups));
                 }
             }
             $days_ago++;
